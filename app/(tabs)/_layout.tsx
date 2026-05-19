@@ -17,18 +17,21 @@ export default function TabLayout() {
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Tab One',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={Platform.select({
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }) as any}
+              name={
+                Platform.select({
+                  ios: 'chevron.left.forwardslash.chevron.right',
+                  android: 'code',
+                  web: 'code',
+                }) as any
+              }
               tintColor={color}
               size={28}
             />
@@ -38,7 +41,9 @@ export default function TabLayout() {
               <Pressable style={{ marginRight: 15 }}>
                 {({ pressed }) => (
                   <SymbolView
-                    name={Platform.select({ ios: 'info.circle', android: 'info', web: 'info' }) as any}
+                    name={
+                      Platform.select({ ios: 'info.circle', android: 'info', web: 'info' }) as any
+                    }
                     size={25}
                     tintColor={Colors[colorScheme].text}
                     style={{ opacity: pressed ? 0.5 : 1 }}
@@ -55,11 +60,13 @@ export default function TabLayout() {
           title: 'Tab Two',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={Platform.select({
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }) as any}
+              name={
+                Platform.select({
+                  ios: 'chevron.left.forwardslash.chevron.right',
+                  android: 'code',
+                  web: 'code',
+                }) as any
+              }
               tintColor={color}
               size={28}
             />
