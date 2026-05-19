@@ -19,8 +19,11 @@ export default function RegisterStep2Screen() {
             return;
         }
 
+        // Зберігаємо в стейт про всяк випадок
         setRegistrationData({ name });
-        registerUser();
+
+        // Передаємо фінальне ім'я прямо у виклик реєстрації, щоб уникнути асинхронного багу
+        registerUser({ name });
 
         router.replace('/(tabs)');
     };
@@ -37,7 +40,7 @@ export default function RegisterStep2Screen() {
 
             <View className="mb-10">
                 <CustomText variant="title" className="text-black text-3xl font-black mb-2 text-left uppercase tracking-wider">
-                    Your Name
+                    Register
                 </CustomText>
             </View>
 

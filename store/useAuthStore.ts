@@ -6,7 +6,7 @@ interface AuthState {
   setRegistrationData: (data: Partial<AuthState['registrationData']>) => void;
   clearRegistrationData: () => void;
   login: (email: string) => void;
-  register: () => void;
+  register: (finalData?: { name: string }) => void; 
   logout: () => void;
 }
 
@@ -18,14 +18,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   })),
   clearRegistrationData: () => set({ registrationData: null }),
   login: (email) => set({ user: { email } }),
-  register: () => {
-    const { registrationData } = get();
-    if (registrationData?.email) {
-      set({
-        user: { email: registrationData.email, name: registrationData.name },
-        registrationData: null
-      });
-    }
-  },
+register: (finalData) => {
+  const { registrationData } = get();
+  const mergedData = { ...registrationData, ...finalData };
+  
+  if (mergedData?.email) {
+    set({
+      user: { email: mergedData.email, name: mergedData.name },
+      registrationData: null
+    });
+  }
+},
   logout: () => set({ user: null }),
 }));
