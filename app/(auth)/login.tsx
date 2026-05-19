@@ -19,9 +19,13 @@ export default function LoginScreen() {
             return;
         }
 
-        login(email);
+        const result = login(email, password);
 
-        router.replace('/(tabs)');
+        if (result.success) {
+            router.replace('/(tabs)');
+        } else {
+            alert(result.message);
+        }
     };
 
     return (
@@ -32,11 +36,11 @@ export default function LoginScreen() {
             >
                 <Undo2 size={28} color="#000000" />
             </TouchableOpacity>
+
             <View className="mb-10">
                 <CustomText variant="title" className="text-black text-3xl font-black mb-2 text-left uppercase tracking-wider">
                     Log In
                 </CustomText>
-
             </View>
 
             <View className="mb-8">
@@ -65,6 +69,6 @@ export default function LoginScreen() {
                 onPress={handleLogin}
                 className="mb-4"
             />
-        </View >
+        </View>
     );
 }
