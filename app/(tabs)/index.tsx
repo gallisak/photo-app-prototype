@@ -155,6 +155,7 @@ export default function DiscoverScreen() {
         animationType="fade"
         transparent={false}
         onRequestClose={() => setSelectedPost(null)}
+        statusBarTranslucent={true}
       >
         {selectedPost && (
           <View className="flex-1 bg-black justify-between">
