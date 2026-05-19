@@ -58,7 +58,7 @@ export default function WelcomeScreen() {
                     <Button
                         title="Register"
                         variant="primary"
-                        onPress={() => alert('Register pressed')}
+                        onPress={() => router.push('/(auth)/register')}
                     />
                 </View>
             </View>

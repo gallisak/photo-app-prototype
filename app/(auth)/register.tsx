@@ -6,43 +6,43 @@ import CustomText from '../../components/CustomText';
 import Button from '../../components/Button';
 import { Undo2 } from 'lucide-react-native';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
     const router = useRouter();
-    const login = useAuthStore((state) => state.login);
+    const setRegistrationData = useAuthStore((state) => state.setRegistrationData);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleLogin = () => {
+    const handleNext = () => {
         if (!email || !password) {
             alert('Please fill in all fields.');
             return;
         }
 
-        login(email);
-
-        router.replace('/(tabs)');
+        setRegistrationData({ email, password });
+        router.push('/(auth)/register-step-2');
     };
 
     return (
         <View className="flex-1 bg-white justify-start px-6 pt-12">
+
             <TouchableOpacity
                 onPress={() => router.back()}
                 className="mt-4 mb-8 w-10 h-10 justify-center items-start"
             >
                 <Undo2 size={28} color="#000000" />
             </TouchableOpacity>
+
             <View className="mb-10">
                 <CustomText variant="title" className="text-black text-3xl font-black mb-2 text-left uppercase tracking-wider">
-                    Log In
+                    Register
                 </CustomText>
-
             </View>
 
             <View className="mb-8">
                 <TextInput
                     className="w-full h-14 border-2 border-black px-4 text-black font-semibold mb-4 tracking-wider"
-                    placeholder="email@example.com"
+                    placeholder="EMAIL"
                     placeholderTextColor="#a1a1aa"
                     value={email}
                     onChangeText={setEmail}
@@ -60,9 +60,10 @@ export default function LoginScreen() {
                 />
             </View>
 
+            {/* ГОЛОВНА КНОПКА */}
             <Button
-                title="Log In"
-                onPress={handleLogin}
+                title="Next"
+                onPress={handleNext}
                 className="mb-4"
             />
         </View >
