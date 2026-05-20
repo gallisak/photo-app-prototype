@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
+
 export {
   ErrorBoundary,
 } from 'expo-router';
@@ -12,9 +13,15 @@ export {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const initializeAuth = useAuthStore((state) => state.initialize);
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  useEffect(() => {
+    const unsubscribe = initializeAuth();
+    return unsubscribe;
+  }, [initializeAuth]);
 
   useEffect(() => {
     if (error) throw error;
