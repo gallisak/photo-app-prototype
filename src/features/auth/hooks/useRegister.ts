@@ -1,23 +1,32 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '../../../store/useAuthStore';
+import { Alert } from 'react-native';
 
 export function useRegister() {
     const router = useRouter();
-    const setRegistrationData = useAuthStore((state) => state.setRegistrationData);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleNext = useCallback(() => {
-        if (!email || !password) {
-            alert('Please fill in all fields.');
+        if (!email.trim() || !password.trim()) {
+            Alert.alert('Error', 'Please fill in all fields.');
             return;
         }
 
-        setRegistrationData({ email, password });
-        router.push('/(auth)/register-step-2');
-    }, [email, password, setRegistrationData, router]);
+        if (password.length < 6) {
+            Alert.alert('Error', 'Password should be at least 6 characters long.');
+            return;
+        }
+
+        router.push({
+            pathname: '/(auth)/register-step-2',
+            params: {
+                email: email.trim(),
+                password: password
+            }
+        });
+    }, [email, password, router]);
 
     return {
         email,
