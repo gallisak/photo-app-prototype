@@ -36,7 +36,7 @@ export default function SearchScreen() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!text.trim()) {
-      runSearch(''); // clears results immediately
+      runSearch('');
       return;
     }
 
@@ -57,12 +57,10 @@ export default function SearchScreen() {
       >
         <View className="px-4 pt-16">
 
-          {/* Title */}
           <CustomText className="text-black text-4xl font-light tracking-tight mb-5">
             Search
           </CustomText>
 
-          {/* Search input */}
           <View
             className={`border-[1.5px] border-black px-3.5 py-3 ${isSearching ? 'mb-5' : 'mb-0'}`}
           >
@@ -78,14 +76,12 @@ export default function SearchScreen() {
             />
           </View>
 
-          {/* Loading */}
           {loading && (
             <View className="items-center pt-10">
               <ActivityIndicator size="small" color="#000000" />
             </View>
           )}
 
-          {/* Results */}
           {!loading && hasResults && (
             <>
               <Text className="text-[11px] font-black text-black tracking-[1.5px] uppercase mb-3">
@@ -105,7 +101,6 @@ export default function SearchScreen() {
             </>
           )}
 
-          {/* No results */}
           {!loading && isSearching && !hasResults && (
             <View className="items-center pt-15">
               <Text className="text-[15px] text-zinc-400">
@@ -117,7 +112,6 @@ export default function SearchScreen() {
         </View>
       </ScrollView>
 
-      {/* Full-screen photo modal */}
       <Modal
         visible={selectedPhoto !== null}
         animationType="fade"

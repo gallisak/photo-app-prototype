@@ -33,7 +33,6 @@ function buildPhotos(query: string): SearchPhoto[] {
     }
   }
 
-  // Deterministic shuffle so results feel unique per query
   const seed = lower.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const shuffled = [...urls].sort((a, b) => {
     const ai = (a.charCodeAt(seed % a.length) + seed) % 100;
@@ -63,7 +62,6 @@ export const useSearchStore = create<SearchState>((set, get) => ({
 
     set({ loading: true });
 
-    // Simulate async (debounce is handled at the UI layer)
     setTimeout(() => {
       const photos = buildPhotos(query);
       set({
