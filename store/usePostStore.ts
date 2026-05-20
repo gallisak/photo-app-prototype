@@ -7,6 +7,7 @@ export interface Post {
   authorUsername?: string;
   authorAvatar?: string;
   height?: number;
+  tags?: string[];
 }
 
 interface PostState {
@@ -14,6 +15,7 @@ interface PostState {
   featuredPosts: Post[];
   browsePosts: Post[];
   loadMorePosts: () => void;
+  addPost: (imageUrl: string, tags: string[]) => void;
 }
 
 const INITIAL_POSTS: Post[] = [
@@ -23,7 +25,8 @@ const INITIAL_POSTS: Post[] = [
     height: 220,
     authorName: 'Pawel Czerwinski',
     authorUsername: '@pawel_czerwinski',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150',
+    tags: ['abstract', 'art', 'paint']
   },
   { 
     id: '2', 
@@ -31,7 +34,8 @@ const INITIAL_POSTS: Post[] = [
     height: 160,
     authorName: 'Ridhwan Nordin',
     authorUsername: '@ridznordin',
-    authorAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150',
+    tags: ['abstract', 'neon', 'purple']
   },
   { 
     id: '3', 
@@ -39,7 +43,8 @@ const INITIAL_POSTS: Post[] = [
     height: 260,
     authorName: 'Angelo Pantazis',
     authorUsername: '@angelopantazis',
-    authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150',
+    tags: ['dogs', 'dog', 'puppy', 'animal']
   },
   { 
     id: '4', 
@@ -47,7 +52,8 @@ const INITIAL_POSTS: Post[] = [
     height: 200,
     authorName: 'Sean Oulashin',
     authorUsername: '@seany',
-    authorAvatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=150',
+    tags: ['nature', 'road', 'forest']
   },
   { 
     id: '5', 
@@ -55,7 +61,8 @@ const INITIAL_POSTS: Post[] = [
     height: 180,
     authorName: 'John Doe',
     authorUsername: '@johndoe',
-    authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150',
+    tags: ['architecture', 'building', 'city']
   },
   { 
     id: '6', 
@@ -63,15 +70,15 @@ const INITIAL_POSTS: Post[] = [
     height: 240,
     authorName: 'Jane Smith',
     authorUsername: '@janesmith',
-    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150'
+    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150',
+    tags: ['winter', 'snow', 'girl', 'forest']
   }
 ];
 
 const ADDITIONAL_POSTS: Post[] = [
-  { id: '9', imageUrl: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=400', height: 210 },
-  { id: '10', imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=400', height: 250 },
-  { id: '11', imageUrl: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=400', height: 160 },
-
+  { id: '9', imageUrl: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=400', height: 210, tags: ['nature', 'camping'] },
+  { id: '10', imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=400', height: 250, tags: ['nature', 'tree'] },
+  { id: '11', imageUrl: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=400', height: 160, tags: ['nature', 'bridge'] },
 ];
 
 export const usePostStore = create<PostState>((set) => ({
@@ -127,5 +134,21 @@ export const usePostStore = create<PostState>((set) => ({
     }));
     
     return { browsePosts: [...state.browsePosts, ...endlessPosts] };
+  }),
+
+  addPost: (imageUrl, tags) => set((state) => {
+    const newPost: Post = {
+      id: `user-post-${Date.now()}`,
+      imageUrl,
+      tags,
+      height: 220,
+      authorName: 'Andrii Halchyshak',
+      authorUsername: '@andrew_g',
+      authorAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150',
+    };
+
+    return {
+      browsePosts: [newPost, ...state.browsePosts]
+    };
   })
 }));
