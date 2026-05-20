@@ -1,29 +1,58 @@
 import { useState, useCallback } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Alert } from 'react-native';
+import { updateProfile } from 'firebase/auth';
 import { useAuthStore } from '../../../store/useAuthStore';
 
 export function useRegisterStep2() {
     const router = useRouter();
-    const setRegistrationData = useAuthStore((state) => state.setRegistrationData);
-    const registerUser = useAuthStore((state) => state.register);
+    const { email, password } = useLocalSearchParams<{ email?: string; password?: string }>();
+    const register = useAuthStore((state) => state.register);
+    const isLoading = useAuthStore((state) => state.isLoading);
+    const user = useAuthStore((state) => state.user);
 
     const [name, setName] = useState('');
 
-    const handleRegister = useCallback(() => {
-        if (!name) {
-            alert('Please enter your name.');
+    const handleRegister = useCallback(async () => {
+        if (!name.trim()) {
+            Alert.alert('Error', 'Please enter your name.');
             return;
         }
-        setRegistrationData({ name });
 
-        registerUser({ name });
+        if (!email || !password) {
+            Alert.alert('Error', 'Registration data was lost. Please start over.');
+            router.replace('/(auth)/register');
+            return;
+        }
 
-        router.replace('/(tabs)');
-    }, [name, setRegistrationData, registerUser, router]);
+        try {
+            await register(email, password);
+            const { auth } = require('../../../config/firebase');
+            if (auth.currentUser) {
+                await updateProfile(auth.currentUser, {
+                    displayName: name.trim()
+                });
+            }
+
+            Alert.alert('Success', 'Account created successfully!');
+            router.replace('/(tabs)');
+        } catch (err: any) {
+            let errorMessage = 'Could not sign up. Please try again.';
+
+            if (err.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email address is already in use.';
+            } else if (err.code === 'auth/weak-password') {
+                errorMessage = 'The password is too weak.';
+            }
+
+            Alert.alert('Registration Failed', errorMessage);
+        }
+    }, [name, email, password, register, router]);
 
     return {
         name,
         setName,
+        isLoading,
         handleRegister
     };
 }
