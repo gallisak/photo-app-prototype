@@ -1,19 +1,23 @@
 import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useChatStore } from '../../store/useChatStore';
 import CustomText from '../../components/CustomText';
 
 export default function ChatsScreen() {
     const { chats } = useChatStore();
+    const router = useRouter();
 
     return (
         <View className="flex-1 bg-white">
+            {/* ХЕДЕР */}
             <View className="pt-16 pb-4 border-b border-zinc-200 bg-white justify-center items-center">
                 <CustomText className="text-black text-lg font-bold tracking-tight">
                     Chats
                 </CustomText>
             </View>
 
+            {/* СПИСОК */}
             <FlatList
                 data={chats}
                 keyExtractor={(item) => item.id}
@@ -22,7 +26,7 @@ export default function ChatsScreen() {
                     <TouchableOpacity
                         activeOpacity={0.7}
                         className="flex-row items-center px-4 py-4 border-b border-zinc-100"
-                        onPress={() => alert(`Open chat with ${item.authorName}`)}
+                        onPress={() => router.push(`/chat/${item.id}`)} // Перехід на динамічний роут чату
                     >
                         <Image
                             source={{ uri: item.avatarUrl }}
