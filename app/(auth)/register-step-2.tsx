@@ -1,29 +1,14 @@
-import { useState } from 'react';
+import React from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '../../store/useAuthStore';
-import CustomText from '../../components/CustomText';
-import Button from '../../components/Button';
+import CustomText from '../../src/components/ui/CustomText';
+import Button from '../../src/components/ui/Button';
 import { Undo2 } from 'lucide-react-native';
+import { useRegisterStep2 } from '../../src/features/auth/hooks/useRegisterStep2';
 
 export default function RegisterStep2Screen() {
     const router = useRouter();
-    const setRegistrationData = useAuthStore((state) => state.setRegistrationData);
-    const registerUser = useAuthStore((state) => state.register);
-
-    const [name, setName] = useState('');
-
-    const handleRegister = () => {
-        if (!name) {
-            alert('Please enter your name.');
-            return;
-        }
-        setRegistrationData({ name });
-
-        registerUser({ name });
-
-        router.replace('/(tabs)');
-    };
+    const { name, setName, handleRegister } = useRegisterStep2();
 
     return (
         <View className="flex-1 bg-white justify-start px-6 pt-12">

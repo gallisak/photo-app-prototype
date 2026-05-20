@@ -1,32 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '../../store/useAuthStore';
-import CustomText from '../../components/CustomText';
-import Button from '../../components/Button';
+import CustomText from '../../src/components/ui/CustomText';
+import Button from '../../src/components/ui/Button';
 import { Undo2 } from 'lucide-react-native';
+import { useLogin } from '../../src/features/auth/hooks/useLogin';
 
 export default function LoginScreen() {
     const router = useRouter();
-    const login = useAuthStore((state) => state.login);
-
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const handleLogin = () => {
-        if (!email || !password) {
-            alert('Please fill in all fields.');
-            return;
-        }
-
-        const result = login(email, password);
-
-        if (result.success) {
-            router.replace('/(tabs)');
-        } else {
-            alert(result.message);
-        }
-    };
+    const { email, setEmail, password, setPassword, handleLogin } = useLogin();
 
     return (
         <View className="flex-1 bg-white justify-start px-6 pt-12">

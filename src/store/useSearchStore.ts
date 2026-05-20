@@ -3,7 +3,7 @@ import {
   SEARCH_PHOTO_BANK,
   SEARCH_FALLBACK_PHOTOS,
   SEARCH_PAGE_SIZE,
-} from '../constants/searchPhotos';
+} from '../../constants/searchPhotos';
 
 export interface SearchPhoto {
   id: string;

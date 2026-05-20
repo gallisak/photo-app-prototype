@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
-import { SearchPhoto } from '../store/useSearchStore';
+import { SearchPhoto } from '../../../store/useSearchStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 2;
