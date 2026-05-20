@@ -12,7 +12,6 @@ interface SearchPhotoGridProps {
 }
 
 export default function SearchPhotoGrid({ photos, onPhotoPress }: SearchPhotoGridProps) {
-  // Split into 3 columns (left to right fill)
   const columns: SearchPhoto[][] = [[], [], []];
   photos.forEach((photo, i) => {
     columns[i % 3].push(photo);

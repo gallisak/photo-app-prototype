@@ -35,7 +35,7 @@ const INITIAL_POSTS: Post[] = [
   },
   { 
     id: '3', 
-    imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400', // ТОЙ САМИЙ ПЕСИК З ФІГМИ
+    imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400',
     height: 260,
     authorName: 'Angelo Pantazis',
     authorUsername: '@angelopantazis',

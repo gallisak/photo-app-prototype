@@ -18,11 +18,8 @@ export default function RegisterStep2Screen() {
             alert('Please enter your name.');
             return;
         }
-
-        // Зберігаємо в стейт про всяк випадок
         setRegistrationData({ name });
 
-        // Передаємо фінальне ім'я прямо у виклик реєстрації, щоб уникнути асинхронного багу
         registerUser({ name });
 
         router.replace('/(tabs)');
