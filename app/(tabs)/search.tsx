@@ -1,51 +1,26 @@
-import React, { useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Modal,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
-import { X } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSearchStore, SearchPhoto } from '../../store/useSearchStore';
-import SearchPhotoGrid from '../../components/SearchPhotoGrid';
-import Button from '../../components/Button';
-import CustomText from '../../components/CustomText';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { SearchPhoto } from '../../src/store/useSearchStore';
+import CustomText from '../../src/components/ui/CustomText';
+import Button from '../../src/components/ui/Button';
+import SearchInput from '../../src/features/search/components/SearchInput';
+import SearchPhotoGrid from '../../src/features/search/components/SearchPhotoGrid';
+import SearchPhotoModal from '../../src/features/search/components/SearchPhotoModal';
+import { useSearchFilter } from '../../src/features/search/hooks/useSearchFilter';
 
 export default function SearchScreen() {
   const {
     query,
     displayedPhotos,
-    allPhotos,
     loading,
-    setQuery,
-    runSearch,
+    isSearching,
+    hasResults,
+    hasMore,
+    handleChangeText,
     loadMore,
-  } = useSearchStore();
+  } = useSearchFilter();
 
-  const [selectedPhoto, setSelectedPhoto] = React.useState<SearchPhoto | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleChangeText = (text: string) => {
-    setQuery(text);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (!text.trim()) {
-      runSearch('');
-      return;
-    }
-
-    debounceRef.current = setTimeout(() => runSearch(text), 400);
-  };
-
-  const isSearching = query.trim().length > 0;
-  const hasResults = displayedPhotos.length > 0;
-  const hasMore = displayedPhotos.length < allPhotos.length;
+  const [selectedPhoto, setSelectedPhoto] = useState<SearchPhoto | null>(null);
 
   return (
     <View className="flex-1 bg-white">
@@ -61,20 +36,11 @@ export default function SearchScreen() {
             Search
           </CustomText>
 
-          <View
-            className={`border-[1.5px] border-black px-3.5 py-3 ${isSearching ? 'mb-5' : 'mb-0'}`}
-          >
-            <TextInput
-              value={query}
-              onChangeText={handleChangeText}
-              placeholder="Search all photos"
-              placeholderTextColor="#9ca3af"
-              className="text-base text-black p-0 m-0"
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="search"
-            />
-          </View>
+          <SearchInput
+            value={query}
+            onChangeText={handleChangeText}
+            isSearching={isSearching}
+          />
 
           {loading && (
             <View className="items-center pt-10">
@@ -112,34 +78,10 @@ export default function SearchScreen() {
         </View>
       </ScrollView>
 
-      <Modal
-        visible={selectedPhoto !== null}
-        animationType="fade"
-        transparent={false}
-        onRequestClose={() => setSelectedPhoto(null)}
-        statusBarTranslucent={true}
-      >
-        {selectedPhoto && (
-          <View className="flex-1 bg-black justify-center">
-            <Image
-              source={{ uri: selectedPhoto.uri }}
-              style={{ position: 'absolute', width: '100%', height: '100%' }}
-              resizeMode="contain"
-            />
-            <LinearGradient
-              colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0)']}
-              className="absolute top-0 left-0 right-0 pt-[60px] px-4 pb-8 flex-row justify-end"
-            >
-              <TouchableOpacity
-                onPress={() => setSelectedPhoto(null)}
-                className="w-10 h-10 justify-center items-end"
-              >
-                <X size={28} color="#FFFFFF" />
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        )}
-      </Modal>
+      <SearchPhotoModal
+        photo={selectedPhoto}
+        onClose={() => setSelectedPhoto(null)}
+      />
     </View>
   );
 }

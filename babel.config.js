@@ -9,6 +9,17 @@ module.exports = function (api) {
         },
       ],
     ],
-    plugins: ['nativewind/babel'],
+    plugins: [
+      'nativewind/babel',
+      [
+        'module-resolver',
+        {
+          root: ['./'],
+          alias: {
+            '@src': './src',
+          },
+        },
+      ],
+    ],
   };
 };
