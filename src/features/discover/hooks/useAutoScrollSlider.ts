@@ -3,7 +3,7 @@ import { FlatList, ViewToken } from 'react-native';
 import { Post } from '../../../types';
 
 interface UseAutoScrollSliderReturn {
-  flatListRef: React.RefObject<FlatList<Post>>;
+  flatListRef: React.RefObject<FlatList<Post> | null>;
   currentIndex: number;
   onViewableItemsChanged: (info: { viewableItems: ViewToken[] }) => void;
   viewabilityConfig: { itemVisiblePercentThreshold: number };

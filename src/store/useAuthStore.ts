@@ -1,68 +1,62 @@
 import { create } from 'zustand';
-
-interface User {
-  email: string;
-  password?: string;
-  name?: string;
-}
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 interface AuthState {
-  user: { email: string; name?: string } | null;
-  usersList: User[];
-  registrationData: { email?: string; password?: string; name?: string } | null;
-  setRegistrationData: (data: Partial<AuthState['registrationData']>) => void;
-  clearRegistrationData: () => void;
-  login: (email: string, password: string) => { success: boolean; message: string };
-  register: (finalData?: { name: string }) => void;
-  logout: () => void;
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  initialize: () => void;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  usersList: [],
-  registrationData: null,
+  isLoading: true,
+  error: null,
 
-  setRegistrationData: (data) => set((state) => ({
-    registrationData: { ...state.registrationData, ...data }
-  })),
-
-  clearRegistrationData: () => set({ registrationData: null }),
-
-  login: (email, password) => {
-    const { usersList } = get();
-    
-    const foundUser = usersList.find((u) => u.email.toLowerCase() === email.toLowerCase());
-
-    if (!foundUser) {
-      return { success: false, message: 'User not found. Please register.' };
-    }
-
-    if (foundUser.password !== password) {
-      return { success: false, message: 'Wrong password.' };
-    }
-
-    set({ user: { email: foundUser.email, name: foundUser.name } });
-    return { success: true, message: 'Success!' };
+  initialize: () => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      set({ user, isLoading: false });
+    });
+    return unsubscribe;
   },
 
-  register: (finalData) => {
-    const { registrationData, usersList } = get();
-    const mergedData = { ...registrationData, ...finalData };
-
-    if (mergedData?.email && mergedData?.password) {
-      const newUser: User = {
-        email: mergedData.email,
-        password: mergedData.password,
-        name: mergedData.name
-      };
-
-      set({
-        user: { email: mergedData.email, name: mergedData.name },
-        usersList: [...usersList, newUser],
-        registrationData: null
-      });
+  login: async (email, pass) => {
+    set({ isLoading: true, error: null });
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+      throw err;
     }
   },
 
-  logout: () => set({ user: null }),
+  register: async (email, pass) => {
+    set({ isLoading: true, error: null });
+    try {
+      await createUserWithEmailAndPassword(auth, email, pass);
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+      throw err;
+    }
+  },
+
+  logout: async () => {
+    set({ isLoading: true });
+    try {
+      await signOut(auth);
+      set({ user: null, isLoading: false });
+    } catch (err: any) {
+      set({ isLoading: false });
+    }
+  },
 }));
