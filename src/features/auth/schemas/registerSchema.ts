@@ -10,4 +10,12 @@ export const registerStep1Schema = z.object({
         .min(6, { message: 'Password must be at least 6 characters' }),
 });
 
+export const registerStep2Schema = z.object({
+    name: z
+        .string()
+        .min(2, { message: 'Name must be at least 2 characters' })
+        .max(50, { message: 'Name is too long' }),
+});
+
+export type RegisterStep2FormData = z.infer<typeof registerStep2Schema>;
 export type RegisterStep1FormData = z.infer<typeof registerStep1Schema>;
