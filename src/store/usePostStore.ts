@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 import { db, auth } from '../config/firebase';
 
@@ -19,10 +19,12 @@ interface PostState {
   featuredPost: Post;
   featuredPosts: Post[];
   browsePosts: Post[];
+  userPosts: Post[];
   isUploading: boolean;
   isLoading: boolean;
   loadMorePosts: () => void;
   fetchPosts: () => Promise<void>;
+  fetchUserPosts: () => Promise<void>;
   addPost: (imageUri: string, tags: string[]) => Promise<void>;
 }
 
@@ -78,6 +80,7 @@ export const usePostStore = create<PostState>((set) => ({
     }
   ],
   browsePosts: INITIAL_POSTS,
+  userPosts: [],
   isUploading: false,
   isLoading: false,
 
@@ -128,6 +131,43 @@ export const usePostStore = create<PostState>((set) => ({
     }
   },
 
+  fetchUserPosts: async () => {
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid) return;
+
+    set({ isLoading: true });
+    try {
+      const q = query(
+        collection(db, 'posts'),
+        where('userId', '==', currentUid),
+        orderBy('createdAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const myPosts: Post[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        myPosts.push({
+          id: doc.id,
+          imageUrl: data.imageUrl,
+          tags: data.tags || [],
+          height: data.height || 220,
+          userId: data.userId,
+          authorName: data.authorName,
+          authorUsername: data.authorUsername,
+          authorAvatar: data.authorAvatar,
+          createdAt: data.createdAt,
+        });
+      });
+
+      set({ userPosts: myPosts, isLoading: false });
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+      set({ isLoading: false });
+    }
+  },
+
   addPost: async (imageUri, tags) => {
     set({ isUploading: true });
 
@@ -164,6 +204,7 @@ export const usePostStore = create<PostState>((set) => ({
 
       set((state) => ({
         browsePosts: [clientPost, ...state.browsePosts],
+        userPosts: [clientPost, ...state.userPosts],
         isUploading: false,
       }));
 
