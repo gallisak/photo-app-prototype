@@ -65,7 +65,6 @@ export default function ChatsScreen() {
                                         pathname: '/ai-chat',
                                         params: { agentId: item.agentId, title: item.authorName }
                                     });
-                                    id: item.id
                                 } else {
                                     router.push(`/chat/${item.id}`);
                                 }
