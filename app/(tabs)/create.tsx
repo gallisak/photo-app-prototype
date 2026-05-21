@@ -9,7 +9,8 @@ import { useCreatePost } from '../../src/features/create-post/hooks/useCreatePos
 
 export default function CreatePostScreen() {
     const router = useRouter();
-    const { imageUri, tagsString, setTagsString, setImageUri, pickImage, handlePublish } =
+
+    const { imageUri, tagsString, setTagsString, setImageUri, pickImage, handlePublish, isUploading } =
         useCreatePost();
 
     return (
@@ -24,12 +25,13 @@ export default function CreatePostScreen() {
                     Select Image
                 </Text>
 
-                <ImageUploadZone imageUri={imageUri} onPress={pickImage} />
+                <ImageUploadZone imageUri={imageUri} onPress={isUploading ? () => { } : pickImage} />
 
                 {!imageUri && (
                     <View className="mb-6">
                         <Text className="text-zinc-400 text-xs text-center mb-2">— OR PASTE URL DIRECTLY —</Text>
                         <TextInput
+                            editable={!isUploading}
                             className="w-full h-12 border border-zinc-300 px-4 text-black text-sm"
                             placeholder="https://example.com/photo.jpg"
                             placeholderTextColor="#a1a1aa"
@@ -41,7 +43,8 @@ export default function CreatePostScreen() {
                 <TagsInput value={tagsString} onChangeText={setTagsString} />
 
                 <Button
-                    title="Publish Photo"
+                    title={isUploading ? "Publishing..." : "Publish Photo"}
+                    disabled={isUploading}
                     onPress={() => handlePublish(() => router.replace('/(tabs)'))}
                 />
 

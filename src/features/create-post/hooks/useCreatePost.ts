@@ -9,11 +9,14 @@ interface UseCreatePostReturn {
   setTagsString: (v: string) => void;
   setImageUri: (uri: string | null) => void;
   pickImage: () => Promise<void>;
-  handlePublish: (onSuccess: () => void) => void;
+  handlePublish: (onSuccess: () => void) => Promise<void>;
+  isUploading: boolean;
 }
 
 export function useCreatePost(): UseCreatePostReturn {
-  const { addPost } = usePostStore();
+  const addPost = usePostStore((state) => state.addPost);
+  const isUploading = usePostStore((state) => state.isUploading);
+
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [tagsString, setTagsString] = useState('');
 
@@ -26,10 +29,10 @@ export function useCreatePost(): UseCreatePostReturn {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
+      aspect: [1, 1],
+      quality: 0.3,
     });
 
     if (!result.canceled) {
@@ -38,7 +41,7 @@ export function useCreatePost(): UseCreatePostReturn {
   }, []);
 
   const handlePublish = useCallback(
-    (onSuccess: () => void) => {
+    async (onSuccess: () => void) => {
       if (!imageUri) {
         Alert.alert('Error', 'Please select or provide an image.');
         return;
@@ -49,17 +52,30 @@ export function useCreatePost(): UseCreatePostReturn {
         .map(tag => tag.trim().toLowerCase())
         .filter(tag => tag.length > 0);
 
-      addPost(imageUri, tagsArray);
+      try {
+        await addPost(imageUri, tagsArray);
 
-      setImageUri(null);
-      setTagsString('');
+        setImageUri(null);
+        setTagsString('');
 
-      Alert.alert('Success', 'Photo published!', [
-        { text: 'OK', onPress: onSuccess }
-      ]);
+        Alert.alert('Success', 'Photo published successfully!', [
+          { text: 'OK', onPress: onSuccess }
+        ]);
+      } catch (error) {
+        console.error("Publish handle error:", error);
+        Alert.alert('Upload Failed', 'Failed to publish post. Image might be too large.');
+      }
     },
     [imageUri, tagsString, addPost]
   );
 
-  return { imageUri, tagsString, setTagsString, setImageUri, pickImage, handlePublish };
+  return {
+    imageUri,
+    tagsString,
+    setTagsString,
+    setImageUri,
+    pickImage,
+    handlePublish,
+    isUploading
+  };
 }
