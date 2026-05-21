@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { collection, addDoc, getDocs, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, where, limit, startAfter, serverTimestamp } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 import { db, auth } from '../config/firebase';
 
@@ -20,13 +20,17 @@ interface PostState {
   featuredPosts: Post[];
   browsePosts: Post[];
   userPosts: Post[];
+  lastVisibleDoc: any;
+  hasMore: boolean;
   isUploading: boolean;
   isLoading: boolean;
-  loadMorePosts: () => void;
+  loadMorePosts: () => Promise<void>;
   fetchPosts: () => Promise<void>;
   fetchUserPosts: () => Promise<void>;
   addPost: (imageUri: string, tags: string[]) => Promise<void>;
 }
+
+const POSTS_LIMIT = 4;
 
 const INITIAL_POSTS: Post[] = [
   {
@@ -37,32 +41,10 @@ const INITIAL_POSTS: Post[] = [
     authorUsername: '@pawel_czerwinski',
     authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150',
     tags: ['abstract', 'art', 'paint']
-  },
-  {
-    id: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400',
-    height: 160,
-    authorName: 'Ridhwan Nordin',
-    authorUsername: '@ridznordin',
-    authorAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150',
-    tags: ['abstract', 'neon', 'purple']
-  },
-  {
-    id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400',
-    height: 260,
-    authorName: 'Angelo Pantazis',
-    authorUsername: '@angelopantazis',
-    authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150',
-    tags: ['dogs', 'dog', 'puppy', 'animal']
   }
 ];
 
-const ADDITIONAL_POSTS: Post[] = [
-  { id: '9', imageUrl: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=400', height: 210, tags: ['nature', 'camping'] },
-];
-
-export const usePostStore = create<PostState>((set) => ({
+export const usePostStore = create<PostState>((set, get) => ({
   featuredPost: {
     id: 'featured',
     imageUrl: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=600',
@@ -79,33 +61,25 @@ export const usePostStore = create<PostState>((set) => ({
       authorAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150',
     }
   ],
-  browsePosts: INITIAL_POSTS,
+  browsePosts: [],
   userPosts: [],
+  lastVisibleDoc: null,
+  hasMore: true,
   isUploading: false,
   isLoading: false,
 
-  loadMorePosts: () => set((state) => {
-    const hasMore = !state.browsePosts.some(post => post.id === '9');
-
-    if (hasMore) {
-      return { browsePosts: [...state.browsePosts, ...ADDITIONAL_POSTS] };
-    }
-
-    const endlessPosts = ADDITIONAL_POSTS.map(post => ({
-      ...post,
-      id: `${post.id}-${Date.now()}-${Math.random()}`
-    }));
-
-    return { browsePosts: [...state.browsePosts, ...endlessPosts] };
-  }),
-
   fetchPosts: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, hasMore: true, lastVisibleDoc: null });
     try {
-      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const q = query(
+        collection(db, 'posts'),
+        orderBy('createdAt', 'desc'),
+        limit(POSTS_LIMIT)
+      );
 
+      const querySnapshot = await getDocs(q);
       const loadedPosts: Post[] = [];
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         loadedPosts.push({
@@ -121,12 +95,62 @@ export const usePostStore = create<PostState>((set) => ({
         });
       });
 
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+
       set({
         browsePosts: loadedPosts.length > 0 ? loadedPosts : INITIAL_POSTS,
+        lastVisibleDoc: lastVisible,
+        hasMore: loadedPosts.length === POSTS_LIMIT,
         isLoading: false
       });
     } catch (error) {
       console.error('Error fetching posts:', error);
+      set({ browsePosts: INITIAL_POSTS, isLoading: false, hasMore: false });
+    }
+  },
+
+  loadMorePosts: async () => {
+    const { lastVisibleDoc, browsePosts, isLoading, hasMore } = get();
+
+    if (isLoading || !hasMore || !lastVisibleDoc) return;
+
+    set({ isLoading: true });
+    try {
+      const nextQ = query(
+        collection(db, 'posts'),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastVisibleDoc),
+        limit(POSTS_LIMIT)
+      );
+
+      const querySnapshot = await getDocs(nextQ);
+      const nextPosts: Post[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        nextPosts.push({
+          id: doc.id,
+          imageUrl: data.imageUrl,
+          tags: data.tags || [],
+          height: data.height || 200,
+          userId: data.userId,
+          authorName: data.authorName,
+          authorUsername: data.authorUsername,
+          authorAvatar: data.authorAvatar,
+          createdAt: data.createdAt,
+        });
+      });
+
+      const nextLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+
+      set({
+        browsePosts: [...browsePosts, ...nextPosts],
+        lastVisibleDoc: nextLastVisible,
+        hasMore: nextPosts.length === POSTS_LIMIT,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Error loading more posts:', error);
       set({ isLoading: false });
     }
   },

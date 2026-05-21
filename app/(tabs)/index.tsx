@@ -9,9 +9,10 @@ import DiscoverMasonryGrid from '../../src/features/discover/components/Discover
 import FullScreenPhotoModal from '../../src/components/shared/FullScreenPhotoModal';
 
 export default function DiscoverScreen() {
-  const { featuredPosts, browsePosts, loadMorePosts, fetchPosts, isLoading } = usePostStore();
+  const { featuredPosts, browsePosts, loadMorePosts, fetchPosts, isLoading, hasMore } = usePostStore();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -57,13 +58,23 @@ export default function DiscoverScreen() {
             <DiscoverMasonryGrid posts={browsePosts} onPostPress={setSelectedPost} />
           )}
 
-          <View className="mt-4 mb-8">
-            <Button
-              title="See more"
-              variant="outline"
-              onPress={loadMorePosts}
-            />
-          </View>
+          {hasMore && (
+            <View className="mt-4 mb-8">
+              <Button
+                title={isLoading ? "Loading..." : "See more"}
+                variant="outline"
+                disabled={isLoading}
+                onPress={loadMorePosts}
+              />
+            </View>
+          )}
+
+          {!hasMore && browsePosts.length > 0 && (
+            <Text className="text-zinc-400 text-xs text-center my-6 italic tracking-wide">
+              You've reached the end of the feed
+            </Text>
+          )}
+
         </View>
       </ScrollView>
 
