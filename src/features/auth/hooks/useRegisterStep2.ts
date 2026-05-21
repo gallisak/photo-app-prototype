@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Alert } from 'react-native';
 import { updateProfile } from 'firebase/auth';
@@ -9,16 +9,8 @@ export function useRegisterStep2() {
     const { email, password } = useLocalSearchParams<{ email?: string; password?: string }>();
     const register = useAuthStore((state) => state.register);
     const isLoading = useAuthStore((state) => state.isLoading);
-    const user = useAuthStore((state) => state.user);
 
-    const [name, setName] = useState('');
-
-    const handleRegister = useCallback(async () => {
-        if (!name.trim()) {
-            Alert.alert('Error', 'Please enter your name.');
-            return;
-        }
-
+    const handleRegister = useCallback(async (name: string) => {
         if (!email || !password) {
             Alert.alert('Error', 'Registration data was lost. Please start over.');
             router.replace('/(auth)/register');
@@ -27,6 +19,7 @@ export function useRegisterStep2() {
 
         try {
             await register(email, password);
+
             const { auth } = require('../../../config/firebase');
             if (auth.currentUser) {
                 await updateProfile(auth.currentUser, {
@@ -47,11 +40,9 @@ export function useRegisterStep2() {
 
             Alert.alert('Registration Failed', errorMessage);
         }
-    }, [name, email, password, register, router]);
+    }, [email, password, register, router]);
 
     return {
-        name,
-        setName,
         isLoading,
         handleRegister
     };
