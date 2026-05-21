@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { useAuthStore } from '../../../store/useAuthStore';
@@ -8,15 +8,7 @@ export function useLogin() {
     const login = useAuthStore((state) => state.login);
     const isLoading = useAuthStore((state) => state.isLoading);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const handleLogin = useCallback(async () => {
-        if (!email.trim() || !password.trim()) {
-            Alert.alert('Error', 'Please fill in all fields.');
-            return;
-        }
-
+    const handleLogin = useCallback(async (email: string, password: string) => {
         try {
             await login(email.trim(), password);
             router.replace('/(tabs)');
@@ -27,17 +19,15 @@ export function useLogin() {
                 errorMessage = 'Invalid email or password.';
             } else if (err.code === 'auth/invalid-email') {
                 errorMessage = 'Please enter a valid email address.';
+            } else if (err.message) {
+                errorMessage = err.message;
             }
 
             Alert.alert('Login Failed', errorMessage);
         }
-    }, [email, password, login, router]);
+    }, [login, router]);
 
     return {
-        email,
-        setEmail,
-        password,
-        setPassword,
         isLoading,
         handleLogin
     };
