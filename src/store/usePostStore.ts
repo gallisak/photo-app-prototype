@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 import { db, auth } from '../config/firebase';
 
@@ -20,7 +20,9 @@ interface PostState {
   featuredPosts: Post[];
   browsePosts: Post[];
   isUploading: boolean;
+  isLoading: boolean;
   loadMorePosts: () => void;
+  fetchPosts: () => Promise<void>;
   addPost: (imageUri: string, tags: string[]) => Promise<void>;
 }
 
@@ -77,6 +79,7 @@ export const usePostStore = create<PostState>((set) => ({
   ],
   browsePosts: INITIAL_POSTS,
   isUploading: false,
+  isLoading: false,
 
   loadMorePosts: () => set((state) => {
     const hasMore = !state.browsePosts.some(post => post.id === '9');
@@ -93,6 +96,38 @@ export const usePostStore = create<PostState>((set) => ({
     return { browsePosts: [...state.browsePosts, ...endlessPosts] };
   }),
 
+  fetchPosts: async () => {
+    set({ isLoading: true });
+    try {
+      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      const loadedPosts: Post[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedPosts.push({
+          id: doc.id,
+          imageUrl: data.imageUrl,
+          tags: data.tags || [],
+          height: data.height || 200,
+          userId: data.userId,
+          authorName: data.authorName,
+          authorUsername: data.authorUsername,
+          authorAvatar: data.authorAvatar,
+          createdAt: data.createdAt,
+        });
+      });
+
+      set({
+        browsePosts: loadedPosts.length > 0 ? loadedPosts : INITIAL_POSTS,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      set({ isLoading: false });
+    }
+  },
+
   addPost: async (imageUri, tags) => {
     set({ isUploading: true });
 
@@ -106,10 +141,12 @@ export const usePostStore = create<PostState>((set) => ({
         finalImageUrl = `data:image/jpeg;base64,${base64Data}`;
       }
 
+      const randomHeight = Math.floor(Math.random() * (260 - 160 + 1)) + 160;
+
       const newPostData = {
         imageUrl: finalImageUrl,
         tags: tags,
-        height: 220,
+        height: randomHeight,
         userId: auth.currentUser?.uid || 'anonymous',
         authorName: auth.currentUser?.displayName || 'User',
         authorUsername: auth.currentUser?.email?.split('@')[0] || 'user',
