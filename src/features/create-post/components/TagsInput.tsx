@@ -4,9 +4,10 @@ import { View, Text, TextInput } from 'react-native';
 interface TagsInputProps {
   value: string;
   onChangeText: (text: string) => void;
+  onFocus?: () => void;
 }
 
-export default function TagsInput({ value, onChangeText }: TagsInputProps) {
+export default function TagsInput({ value, onChangeText, onFocus }: TagsInputProps) {
   return (
     <View className="w-full mb-10">
       <Text className="text-black font-black text-xs uppercase tracking-widest mb-3">
@@ -24,6 +25,7 @@ export default function TagsInput({ value, onChangeText }: TagsInputProps) {
           onChangeText={onChangeText}
           autoCapitalize="none"
           style={{ paddingVertical: 0 }}
+          onFocus={onFocus}
         />
       </View>
     </View>

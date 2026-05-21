@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TextInput, ScrollView } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, TextInput, ScrollView, Keyboard, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import CustomText from '../../src/components/ui/CustomText';
 import Button from '../../src/components/ui/Button';
@@ -9,13 +9,52 @@ import { useCreatePost } from '../../src/features/create-post/hooks/useCreatePos
 
 export default function CreatePostScreen() {
     const router = useRouter();
+    const scrollViewRef = useRef<ScrollView>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [tagsInputY, setTagsInputY] = useState(0);
 
     const { imageUri, tagsString, setTagsString, setImageUri, pickImage, handlePublish, isUploading } =
         useCreatePost();
 
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const showSubscription = Keyboard.addListener(showEvent, (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+        const hideSubscription = Keyboard.addListener(hideEvent, () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
+
+    const handleTagsFocus = () => {
+        setTimeout(() => {
+            if (scrollViewRef.current) {
+                scrollViewRef.current.scrollTo({
+                    y: Math.max(0, tagsInputY - 300),
+                    animated: true,
+                });
+            }
+        }, 100);
+    };
+
     return (
-        <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
-            <View className="px-4 pt-16 pb-8">
+        <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 bg-white"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+        >
+            <View
+                style={{ paddingBottom: keyboardHeight > 0 ? keyboardHeight + 100 : 40 }}
+                className="px-4 pt-16"
+            >
 
                 <CustomText className="text-black text-4xl font-light tracking-tight mb-8">
                     New Photo
@@ -40,13 +79,21 @@ export default function CreatePostScreen() {
                     </View>
                 )}
 
-                <TagsInput value={tagsString} onChangeText={setTagsString} />
+                <View
+                    onLayout={(event) => {
+                        setTagsInputY(event.nativeEvent.layout.y);
+                    }}
+                >
+                    <TagsInput value={tagsString} onChangeText={setTagsString} onFocus={handleTagsFocus} />
+                </View>
 
                 <Button
                     title={isUploading ? "Publishing..." : "Publish Photo"}
                     disabled={isUploading}
                     onPress={() => handlePublish(() => router.replace('/(tabs)'))}
                 />
+
+                <View className="min-h-12" />
 
             </View>
         </ScrollView>
