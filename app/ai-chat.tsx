@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Keyboard } from 'react-native';
 import { useAIChatStore, AIMessage, AIAgentId } from '../src/store/useAIChatStore';
 import { auth } from '../src/config/firebase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,6 +16,30 @@ export default function AIChatScreen() {
     const { aiMessages, listenToAiMessages, sendAiMessage, isLoading, isAiTyping, streamingMessage } = useAIChatStore();
     const [inputText, setInputText] = useState('');
     const flatListRef = useRef<FlatList>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const scrollOffsetRef = useRef(0);
+
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+        
+        const showSubscription = Keyboard.addListener(showEvent, (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+            if (scrollOffsetRef.current < 100) {
+                setTimeout(() => {
+                    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+                }, 100);
+            }
+        });
+        const hideSubscription = Keyboard.addListener(hideEvent, () => {
+            setKeyboardHeight(0);
+        });
+        
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, []);
 
     useEffect(() => {
         const unsubscribe = listenToAiMessages(agentId);
@@ -53,10 +77,12 @@ export default function AIChatScreen() {
         );
     };
 
+    const isKeyboardOpen = keyboardHeight > 0;
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={-20}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             className="flex-1 bg-white"
         >
             <View className="px-4 pt-16 pb-4 border-b border-zinc-100 bg-white flex-row items-center">
@@ -81,6 +107,10 @@ export default function AIChatScreen() {
                         inverted
                         keyExtractor={(item) => item.id}
                         renderItem={renderItem}
+                        onScroll={(e) => {
+                            scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+                        }}
+                        scrollEventThrottle={16}
                         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 20 }}
                         ListHeaderComponent={
                             isAiTyping ? (
@@ -97,7 +127,7 @@ export default function AIChatScreen() {
             )}
 
             <View
-                style={{ paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }}
+                style={{ paddingBottom: isKeyboardOpen ? 20 : (insets.bottom > 0 ? insets.bottom : 12) }}
                 className="px-4 pt-3 border-t border-zinc-100 bg-white flex-row items-center"
             >
                 <TextInput
