@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Image, Text, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Image, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { usePostStore, Post } from '../../src/store/usePostStore';
 import Button from '../../src/components/ui/Button';
@@ -8,6 +8,7 @@ import FullScreenPhotoModal from '../../src/components/shared/FullScreenPhotoMod
 
 export default function ProfileScreen() {
     const user = useAuthStore((state) => state.user);
+    const logout = useAuthStore((state) => state.logout);
 
     const { userPosts, fetchUserPosts, isLoading } = usePostStore();
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -38,9 +39,20 @@ export default function ProfileScreen() {
                         {userName}
                     </Text>
 
-                    <Text className="text-zinc-500 font-bold text-[11px] uppercase tracking-[1.5px] mb-8">
+                    <Text className="text-zinc-500 font-bold text-[11px] uppercase tracking-[1.5px] mb-4">
                         {userEmail}
                     </Text>
+
+                    <TouchableOpacity
+                        onPress={logout}
+                        activeOpacity={0.7}
+                        className="mb-8 border border-zinc-200 px-5 py-2 rounded-full"
+                    >
+                        <Text className="text-red-500 font-bold text-[10px] uppercase tracking-[1px]">
+                            Log Out
+                        </Text>
+                    </TouchableOpacity>
+
                     {isLoading && userPosts.length === 0 ? (
                         <View className="py-10 justify-center items-center">
                             <ActivityIndicator size="large" color="#000" />
