@@ -1,108 +1,136 @@
-# 📸 Photo App Prototype (Expo + TypeScript + NativeWind + Zustand)
+# 📸 Photo App Prototype (Expo + TypeScript + Zustand + Firebase)
 
-Welcome to the **Photo App Prototype**! This project is a premium, modern, and highly responsive mobile application prototype designed for viewing, searching, adding photos, and simulated chatting.
+Welcome to the **Photo App Prototype**! This is a modern, premium, and highly responsive mobile photo-sharing application prototype built on top of **React Native** and **Expo**.
 
-Built using the latest industry standards, this repository is pre-configured and 100% ready for the implementation of the Figma design.
-
----
-
-## 🛠️ Stack & Configuration Status
-
-Here is the current checklist of what is fully configured and ready to run:
-
-*   **⚡ Expo SDK 54 (expo-router v6)**: Pre-configured with file-based routing.
-*   **🔷 TypeScript**: 100% typed, strict-ready, type-checking passes cleanly (`npx tsc --noEmit` is clean).
-*   **🎨 NativeWind (Tailwind CSS v3)**: Fully integrated with Babel and PostCSS configurations, optimized for native component styling.
-*   **🧠 Zustand State Management**: Installed and ready to manage the application state globally.
-*   **🔥 Firebase / Auth Integration**: SDK installed (`firebase` v10) and ready for backend hookups.
-*   **🛡️ ESLint & Prettier**: Configured with strict style-matching rules. All files are fully formatted and formatted automatically on saves.
+All development milestones have been fully implemented: the application is completely integrated with **Firebase (Auth & Firestore)**, global state management is handled elegantly via **Zustand**, a beautiful and reactive user interface is styled using **NativeWind (Tailwind CSS)**, and a complete media lifecycle (from image selection and aggressive optimization to cloud storage) is fully functional.
 
 ---
 
-## 📂 Project Architecture & Folders
+## 🚀 Key Features
 
-The project follows a standard Expo Router setup:
+This prototype includes the following fully-working and integrated modules:
+
+### 1. 🔐 Complete Authentication Flow (Firebase Auth)
+*   **Sign In (`Login`) & Sign Up (`Register`)**: Modern landing screen, real-time input validations, and integration with Firebase Authentication.
+*   **Step-by-Step Registration**: Split into two user-friendly steps (email/password setup + username and display name customization).
+*   **Global Auth State (`useAuthStore`)**: Manages the authenticated user's session, automatically restores sessions on app restart, and includes a functional **Log Out** button.
+
+### 2. 📰 Dynamic Discover Feed (Firestore)
+*   **Masonry Grid Layout**: A gorgeous asynchronous photo grid with variable heights for a premium, Pinterest-style experience.
+*   **Firestore Integration & Pagination**: Real-time content fetching with cursor-based pagination (`startAfter`) via a custom **"See more"** button.
+*   **Pull-to-Refresh**: Seamless gesture-based refresh (`RefreshControl`) to reload the home feed instantly.
+*   **Full-Screen Viewer**: Clicking any post opens a beautiful full-screen modal showing the image, author details, and associated tags.
+
+### 3. 🖼️ Post Creation & Optimization (Base64 + ImagePicker)
+*   **Native Photo Library**: Select images from your device using `expo-image-picker` with native permissions.
+*   **Aggressive Compression & Cropping**: Selected photos are forced into square aspect ratio (`aspect: [1, 1]`) and optimized with `quality: 0.3`. This massively reduces the file size (usually under 50-100 KB), making them perfect for free-tier Firestore storage (1MB document limit).
+*   **Base64 Encoding**: Local URIs are converted into a Data URL scheme using `expo-file-system/legacy`, ensuring instant offline rendering and successful cloud storage.
+*   **Smart Tagging**: Comma-separated tags are parsed, cleaned, and stored in the database.
+
+### 4. 👤 Interactive User Profile
+*   **Author's Personal Gallery**: Displays exclusively the photos uploaded by the currently authenticated user, fetched dynamically using Firestore queries (`where('userId', '==', uid)`).
+*   **Account Settings**: Displays the logged-in user's name, email, and features a functional sign-out button.
+
+### 5. 💬 Interactive Chat Rooms
+*   **Conversations List**: Displays active dialogs with avatars, user names, and previews of the latest messages.
+*   **Chat View**: Fully functional interactive messaging screen with instant, real-time message updates.
+
+### 6. 🔍 Tag-Based Search
+*   **Instant Search**: Filter all discover posts in real time using keywords or specific hashtags via the search bar.
+
+---
+
+## 🛠️ Tech Stack
+
+*   **Core:** React Native & Expo SDK 54
+*   **Routing:** Expo Router v6 (file-based navigation, supporting tab layouts, stack navigators, and modals)
+*   **Database & Auth:** Firebase SDK v10 (Authentication & Cloud Firestore)
+*   **State Management:** Zustand (lightweight, reactive, and boilerplate-free global stores)
+*   **Styling:** NativeWind (Tailwind CSS v3 for React Native) + Custom CSS for fluid micro-animations and typography
+*   **Media Processing:** Expo Image Picker, Expo File System (Legacy API)
+*   **Type Safety:** TypeScript (fully configured in strict mode)
+
+---
+
+## 📂 Project Architecture
 
 ```
 photo-app-prototype/
-├── app/                  # File-based Navigation Router
-│   ├── (tabs)/           # Main Application Tab-bar Screens
-│   │   ├── _layout.tsx   # Tabs layout & customized icons
-│   │   ├── index.tsx     # Tab 1: Discover / Home Feed
-│   │   └── two.tsx       # Tab 2: Profile / Chats
-│   ├── _layout.tsx       # Application root layout with ThemeProviders
-│   └── modal.tsx         # Popup screens (e.g. Add Photo)
-├── components/           # Reusable & Base Custom UI Elements
-├── constants/            # Styled design tokens, sizes, and colors
-├── assets/               # Typography, local assets, and images
-├── tailwind.config.js    # Tailwind scanner paths & design customizations
-├── tsconfig.json         # TypeScript compiler configurations
-├── .eslintrc.js          # ESLint legacy config for Expo rules
-└── .prettierrc           # Prettier rules with tailwind sorting integration
+├── app/                        # Screens and routing (Expo Router)
+│   ├── (auth)/                 # Auth & Welcome screens
+│   │   ├── index.tsx           # Entry welcome screen
+│   │   ├── login.tsx           # Sign-in page
+│   │   ├── register.tsx        # Registration (Step 1)
+│   │   └── register-step-2.tsx # Registration (Step 2)
+│   ├── (tabs)/                 # Main Navigation Tab Bar
+│   │   ├── index.tsx           # Discover Screen (Masonry Grid)
+│   │   ├── search.tsx          # Tag search interface
+│   │   ├── create.tsx          # Post creation screen (image picker & tags)
+│   │   ├── chart.tsx           # List of active chat rooms
+│   │   └── profile.tsx         # User Profile & Log Out
+│   ├── chat/
+│   │   └── [id].tsx            # Dedicated interactive chat screen
+│   └── _layout.tsx             # Root layout and theme providers
+├── src/
+│   ├── components/             # Reusable UI components (buttons, text, inputs)
+│   ├── config/
+│   │   └── firebase.ts         # Firebase initialization and configuration
+│   ├── features/               # Feature-specific components and sub-logic (chats, upload)
+│   ├── store/                  # Global Zustand stores (auth, posts, chats, search)
+│   └── types/                  # General TypeScript interfaces
+├── assets/                     # Static files (app icons, custom fonts, splash screens)
+├── tailwind.config.js          # NativeWind / Tailwind CSS settings
+├── tsconfig.json               # TypeScript compiler config
+└── package.json                # Scripts & dependency definitions
 ```
+
+---
+
+## ⚙️ Environment Variables Config
+
+To connect your project to Firebase, create a `.env.local` file in the root of the project and add your Firebase credentials:
+
+```env
+EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+*Note: Expo automatically loads environment variables prefixed with `EXPO_PUBLIC_` and makes them available on the client side at runtime.*
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to run the application on your machine.
-
 ### 1. Install Dependencies
-Dependencies are already installed, but to make sure everything is completely synced:
 ```bash
 npm install
 ```
 
-### 2. Start the Development Server
-Run the Expo development server:
+### 2. Start the Metro Bundler
 ```bash
 npm run start
 ```
+
+Once Metro starts, use these interactive keys:
 *   Press **`i`** to open the simulator on **iOS** (requires Xcode).
-*   Press **`a`** to open the simulator on **Android** (requires Android Studio).
-*   Scan the QR code in the terminal using the **Expo Go** app on your physical device.
+*   Press **`a`** to open the emulator on **Android** (requires Android Studio).
+*   Scan the QR code using the **Expo Go** application on your physical iOS or Android device to test live.
 
-### 3. Run Linter & Typechecks
-Ensure that your code style and type safety remain pristine during development:
+---
+
+## 🛡️ Type Safety & Linting
+
+This project is 100% strictly typed. To run a TypeScript check and ensure that everything is clean and safe from runtime exceptions, run:
+
 ```bash
-# Run ESLint + Prettier check
-npx eslint .
-
-# Fix all auto-fixable formatting errors
-npx eslint . --fix
-
-# Run TypeScript type check
 npx tsc --noEmit
 ```
 
----
-
-## 🎯 Next Implementation Steps (To-Do)
-
-To complete the prototype successfully according to the Figma specification, follow this roadmap:
-
-### Step 1: Base Design System & UI Elements
-*   [ ] Define custom color palette in `constants/Colors.ts` matching Figma's styles.
-*   [ ] Implement a unified **`<Text>`** component with variants (`title`, `subtitle`, `body`).
-*   [ ] Implement a highly customizable **`<Button>`** component with modern ripple & press effects.
-
-### Step 2: Auth Screens (Log In & Sign Up)
-*   [ ] Create `app/auth/login.tsx` & `app/auth/register.tsx`.
-*   [ ] Build beautiful input fields with validations and a responsive login flow.
-*   [ ] Save session state via a Zustand store.
-
-### Step 3: Discover (Home Grid Feed)
-*   [ ] Transform `app/(tabs)/index.tsx` into a responsive 2 or 3-column photo grid.
-*   [ ] Integrate local mocks or Firebase data.
-*   [ ] Create a swipeable full-screen viewer (`app/photo/[id].tsx`).
-
-### Step 4: Photo Addition
-*   [ ] Integrate `expo-image-picker` to select photos from the gallery.
-*   [ ] Add URL-based upload and instantly append to the Discover feed.
-
-### Step 5: Profile & Chats
-*   [ ] Implement Profile screen (`app/(tabs)/profile.tsx`) showing follower count and mock interactions.
-*   [ ] Implement simulated live-chat interface with mock message exchanges.
+The command will run successfully without any errors or warnings.
 
 ---
-*Developed with 💙 using Expo & React Native.*
+*Developed with 💙 using modern React Native and Expo paradigms.*
