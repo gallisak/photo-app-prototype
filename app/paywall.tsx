@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useStripe } from '@stripe/stripe-react-native';
 import { useSubscriptionStore, SubscriptionPlan } from '../src/store/useSubscriptionStore';
 import CustomText from '../src/components/ui/CustomText';
 import { X, Check } from 'lucide-react-native';
 
 export default function PaywallScreen() {
     const router = useRouter();
+    const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { currentPlan, setCurrentPlan } = useSubscriptionStore();
     const [loading, setLoading] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
@@ -18,39 +20,69 @@ export default function PaywallScreen() {
     ];
 
     const handlePurchase = async (plan: SubscriptionPlan) => {
+        if (plan === 'free') return;
+
         setLoading(true);
         setSelectedPlan(plan);
-        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        setLoading(false);
-        setSelectedPlan(null);
-
-        Alert.alert(
-            'Stripe Checkout (Test Mode)',
-            `Would you like to simulate a successful Stripe payment for the ${plan.toUpperCase()} plan using test card 4242?`,
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
+        try {
+            // 1. Fetch the client secret from our serverless Expo API Route
+            const cents = plan === 'starter' ? 499 : 1499;
+            const response = await fetch('/api/stripe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                {
-                    text: 'Pay Now 💳',
-                    onPress: async () => {
-                        setLoading(true);
-                        setSelectedPlan(plan);
+                body: JSON.stringify({
+                    amount: cents,
+                    plan: plan,
+                }),
+            });
 
-                        await new Promise((resolve) => setTimeout(resolve, 2000));
+            const data = await response.json();
 
-                        setCurrentPlan(plan);
-                        setLoading(false);
-                        setSelectedPlan(null);
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Failed to fetch payment details.');
+            }
 
-                        Alert.alert('Success! 🎉', `Subscription ${plan.toUpperCase()} successfully activated via Stripe.`);
-                        router.back();
-                    },
+            const { clientSecret } = data;
+
+            // 2. Initialize the native payment sheet from Stripe React Native SDK
+            const { error: initError } = await initPaymentSheet({
+                merchantDisplayName: 'Photo App Studio, Inc.',
+                paymentIntentClientSecret: clientSecret,
+                allowsDelayedPaymentMethods: true,
+                defaultBillingDetails: {
+                    name: 'Demo User',
                 },
-            ]
-        );
+            });
+
+            if (initError) {
+                throw new Error(initError.message);
+            }
+
+            // 3. Present the native payment sheet to the customer (This displays the REAL Credit Card input form!)
+            const { error: presentError } = await presentPaymentSheet();
+
+            if (presentError) {
+                // If payment is cancelled or failed:
+                Alert.alert('Payment Cancelled', presentError.message);
+            } else {
+                // 4. Update the Zustand subscription store on success
+                setCurrentPlan(plan);
+                Alert.alert(
+                    'Success! 🎉',
+                    `Subscription ${plan.toUpperCase()} successfully activated via Stripe.`
+                );
+                router.back();
+            }
+        } catch (error: any) {
+            console.error('Stripe Integration Error:', error);
+            Alert.alert('Stripe Error', error.message || 'Something went wrong during payment.');
+        } finally {
+            setLoading(false);
+            setSelectedPlan(null);
+        }
     };
 
     return (
