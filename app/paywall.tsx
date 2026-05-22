@@ -26,7 +26,6 @@ export default function PaywallScreen() {
         setSelectedPlan(plan);
 
         try {
-            // 1. Fetch the client secret from our serverless Expo API Route
             const cents = plan === 'starter' ? 499 : 1499;
             const response = await fetch('/api/stripe', {
                 method: 'POST',
@@ -47,7 +46,6 @@ export default function PaywallScreen() {
 
             const { clientSecret } = data;
 
-            // 2. Initialize the native payment sheet from Stripe React Native SDK
             const { error: initError } = await initPaymentSheet({
                 merchantDisplayName: 'Photo App Studio, Inc.',
                 paymentIntentClientSecret: clientSecret,
@@ -61,14 +59,11 @@ export default function PaywallScreen() {
                 throw new Error(initError.message);
             }
 
-            // 3. Present the native payment sheet to the customer (This displays the REAL Credit Card input form!)
             const { error: presentError } = await presentPaymentSheet();
 
             if (presentError) {
-                // If payment is cancelled or failed:
                 Alert.alert('Payment Cancelled', presentError.message);
             } else {
-                // 4. Update the Zustand subscription store on success
                 setCurrentPlan(plan);
                 Alert.alert(
                     'Success! 🎉',
