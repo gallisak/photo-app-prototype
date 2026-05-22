@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Keyboard } from 'react-native';
+import { View, Text, TextInput, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, Keyboard, StatusBar } from 'react-native';
 import { useAIChatStore, AIMessage, AIAgentId } from '../src/store/useAIChatStore';
 import { auth } from '../src/config/firebase';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -22,7 +22,7 @@ export default function AIChatScreen() {
     useEffect(() => {
         const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
         const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-        
+
         const showSubscription = Keyboard.addListener(showEvent, (e) => {
             setKeyboardHeight(e.endCoordinates.height);
             if (scrollOffsetRef.current < 100) {
@@ -34,7 +34,7 @@ export default function AIChatScreen() {
         const hideSubscription = Keyboard.addListener(hideEvent, () => {
             setKeyboardHeight(0);
         });
-        
+
         return () => {
             showSubscription.remove();
             hideSubscription.remove();
@@ -82,7 +82,8 @@ export default function AIChatScreen() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            keyboardVerticalOffset={0}
+            style={{ flex: 1 }}
             className="flex-1 bg-white"
         >
             <View className="px-4 pt-16 pb-4 border-b border-zinc-100 bg-white flex-row items-center">
@@ -127,7 +128,11 @@ export default function AIChatScreen() {
             )}
 
             <View
-                style={{ paddingBottom: isKeyboardOpen ? 20 : (insets.bottom > 0 ? insets.bottom : 12) }}
+                style={{
+                    paddingBottom: Platform.OS === 'ios'
+                        ? (isKeyboardOpen ? 12 : (insets.bottom > 0 ? insets.bottom : 0))
+                        : (isKeyboardOpen ? keyboardHeight + 8 : 12)
+                }}
                 className="px-4 pt-3 border-t border-zinc-100 bg-white flex-row items-center"
             >
                 <TextInput
