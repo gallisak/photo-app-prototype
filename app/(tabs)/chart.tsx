@@ -2,6 +2,7 @@ import React from 'react';
 import { View, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useChatStore } from '../../src/store/useChatStore';
+import { useSubscriptionStore } from '../../src/store/useSubscriptionStore';
 import CustomText from '../../src/components/ui/CustomText';
 import ChatListItem from '../../src/features/chats/components/ChatListItem';
 
@@ -17,6 +18,7 @@ interface AIChatItem {
 export default function ChatsScreen() {
     const { chats } = useChatStore();
     const router = useRouter();
+    const currentPlan = useSubscriptionStore((state) => state.currentPlan);
 
     const aiAgents: AIChatItem[] = [
         {
@@ -61,6 +63,11 @@ export default function ChatsScreen() {
                             avatarUrl={item.avatarUrl}
                             onPress={() => {
                                 if (isAIElement) {
+                                    if (item.agentId === 'photo-coach' && currentPlan === 'free') {
+                                        router.push('/paywall');
+                                        return;
+                                    }
+
                                     router.push({
                                         pathname: '/ai-chat',
                                         params: { agentId: item.agentId, title: item.authorName }

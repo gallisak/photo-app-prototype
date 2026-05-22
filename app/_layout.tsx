@@ -4,6 +4,8 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { StripeProvider } from '@stripe/stripe-react-native';
+import CustomText from '@/src/components/ui/CustomText';
 
 export {
   ErrorBoundary,
@@ -45,6 +47,7 @@ function RootLayoutNav() {
 
   const segments = useSegments();
   const router = useRouter();
+  const stripeKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   useEffect(() => {
     if (isLoading) return;
@@ -57,6 +60,7 @@ function RootLayoutNav() {
       router.replace('/(tabs)');
     }
   }, [user, segments, isLoading]);
+
   if (isLoading) {
     return (
       <View className="flex-1 bg-white justify-center items-center">
@@ -65,13 +69,25 @@ function RootLayoutNav() {
     );
   }
 
+  if (!stripeKey) {
+    console.log("TRIPE WARNING: Ключ не знайдено в process.env. Перевір .env файл або перезапусти Metro.");
+    return (
+      <View className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#000000" />
+        <CustomText className="text-zinc-400 text-xs mt-4">Initializing Stripe...</CustomText>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white">
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="chat/[id]" />
-      </Stack>
+      <StripeProvider publishableKey={stripeKey}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="chat/[id]" />
+        </Stack>
+      </StripeProvider>
     </View>
   );
 }
